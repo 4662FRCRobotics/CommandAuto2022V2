@@ -4,9 +4,15 @@
 
 package frc.robot.subsystems;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.networktables.NetworkTableEntry;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
@@ -18,6 +24,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.commands.DriveDistanceSMPID;
 import frc.robot.commands.DriveDistanceTrapProfile;
+import frc.robot.commands.DriveRamsetePath;
 import frc.robot.commands.WaitForCount;
 import frc.robot.libraries.AutonomousCommands;
 import frc.robot.libraries.AutonomousSteps;
@@ -167,6 +174,9 @@ public class Autonomous extends SubsystemBase {
   private StepState m_stepDriveDist1;
   private StepState m_stepDriveDist2;
   private DriveDistanceSMPID m_driveDistSM1;
+  private Trajectory m_drive3Trajectory;
+  private DriveRamsetePath m_drive3Path;
+  private StepState m_stepDrive3Path;
 
   private AutonomousSteps m_currentStepName;
   private StepState[] [] m_cmdSteps;
@@ -214,12 +224,27 @@ public class Autonomous extends SubsystemBase {
     m_autoCommand.addOption(AutonomousSteps.DRIVE2, m_driveDistSM1);
     m_stepDriveDist2 = new StepState(AutonomousSteps.DRIVE2, () -> m_ConsoleAuto.getRawButton(3));
 
+    genTrajectory();
+    m_drive3Path = new DriveRamsetePath(m_drive3Trajectory, m_driveNorm);
+    m_autoCommand.addOption(AutonomousSteps.DRIVE3, m_drive3Path);
+    m_stepDrive3Path = new StepState(AutonomousSteps.DRIVE3, () -> m_ConsoleAuto.getRawButton(4));
+
+
     m_cmdSteps = new StepState [] [] {
       {m_stepWaitForCount, m_stepDriveDist1, m_stepWait1Sw1, m_stepWait2Sw2},
       {m_stepWait2Sw1, m_stepDriveDist2, m_stepWaitForCount},
-      {m_stepWaitForCount, m_stepWait2Sw1}
+      {m_stepWaitForCount, m_stepDrive3Path, m_stepWait2Sw1}
     };
 
+  }
+
+  private void genTrajectory() {
+    m_drive3Trajectory = 
+      TrajectoryGenerator.generateTrajectory(
+        new Pose2d(0, 0, new Rotation2d(0)),
+        List.of(new Translation2d(1, 0)),
+        new Pose2d(2, 0, new Rotation2d(0)),
+        m_driveNorm.getTrajConfig());
   }
 
   @Override
@@ -278,11 +303,12 @@ public class Autonomous extends SubsystemBase {
     String completionAction = kSTATUS_DONE;
 
     while (m_currentCommand == null && !m_bIsCommandDone) {
-    m_currentStepName = getNextActiveCommand(completionAction);
+      m_currentStepName = getNextActiveCommand(completionAction);
       if (m_currentStepName != null) {
         m_currentCommand = m_autoCommand.getSelected(m_currentStepName);
-      } else {
-        completionAction = kSTATUS_NULL;
+        if (m_currentCommand == null) {
+          completionAction = kSTATUS_NULL;
+        }
       }
     }
     return m_currentCommand;
@@ -307,7 +333,7 @@ public class Autonomous extends SubsystemBase {
           m_strStepStatusList [m_stepIndex] = kSTATUS_ACTIVE;
           stepName = m_cmdSteps [m_iPatternSelect] [m_stepIndex].getName();
         } else {
-          m_strStepStatusList [m_stepIndex] = kSTATUS_SKIP;
+          completionAction = kSTATUS_SKIP;
         }
       }
     }

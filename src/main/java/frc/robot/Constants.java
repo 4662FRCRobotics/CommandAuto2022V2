@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
+import edu.wpi.first.math.trajectory.constraint.DifferentialDriveKinematicsConstraint;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -24,15 +26,22 @@ public final class Constants {
 
         public static final double kRAMP_RATE = 1.0;
         public static final int kCURRENT_LIMT = 40;
+        public static final double kMAX_VOLTAGE = 10;
 
         public static final double kTIRE_SIZE_IN = 6.0;
         public static final double kTIRE_SIZE_M = Units.inchesToMeters(kTIRE_SIZE_IN);
         public static final int kPULSE_PER_ROTATION = 1;
 
-        public static final double kGEAR_REDUCTION = 6.55;
+        private static final double kGEAR_1_DRIVER = 13;
+        private static final double kGEAR_1_OUTPUT = 58;
+        private static final double kGEAR_2_DRIVER = 8; //16; for neo - 8 is for the 500 testing
+        private static final double kGEAR_2_OUTPUT = 32;
+        public static final double kGEAR_REDUCTION = (kGEAR_1_OUTPUT / kGEAR_1_DRIVER) * (kGEAR_2_OUTPUT / kGEAR_2_DRIVER);
         public static final double kENCODER_DISTANCE_PER_PULSE_M = ((double) kPULSE_PER_ROTATION   / kGEAR_REDUCTION) 
              * (kTIRE_SIZE_M * Math.PI);
-        public static final double kTRACK_WIDTH_M = 0.64;
+        public static final double kTRACK_WIDTH_M = 0.60;
+        public static final DifferentialDriveKinematics kDRIVE_KINEMATICS = 
+            new DifferentialDriveKinematics(kTRACK_WIDTH_M);
         
         public static final double kCONTROL_P = .133;
         public static final double kCONTROL_I = 0;
@@ -48,6 +57,18 @@ public final class Constants {
         public static final double kA_VOLT_SEONDS_SQUARED_PER_METER = 0.074;
         public static final double kMAX_SPEED_METERS_PER_SECOND = 4;
         public static final double kMAX_ACCELERATION_METERS_PER_SECOND_SQUARED = 1;
+
+        public static final double kSMARTMOT_P = .133;
+        public static final double kSMARTMOT_I = 0;
+        public static final double kSMARTMOT_D = 2.7;
+        public static final double kSMARTMOT_IZONE = 0;
+        public static final double kSMARTMOT_FF = 0;
+        public static final double kSMARTMOT_MAX_OUT = 1.0;
+        public static final double kSMARTMOT_MIN_OUT = -1.0;
+        public static final double kSMARTMOT_MAX_V = 500;
+        public static final double kSMARTMOT_MIN_V = 0;
+        public static final double kSMARTMOT_MAX_ACC = 100;
+        public static final double kSMARTMOT_ALLOWED_ERR = 0.0;
     }
 
     public static final class ControllerConst {

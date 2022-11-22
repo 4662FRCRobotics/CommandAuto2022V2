@@ -32,6 +32,6 @@ public class DriveDistanceTrapProfile extends TrapezoidProfileCommand {
           driveNorm
         );
 
-    driveNorm.resetEncoders();
+    driveNorm.resetTrapezoidal();
   }
 }

@@ -91,31 +91,31 @@ public class Autonomous extends SubsystemBase {
                                       .withSize(1, 1)
                                       .getEntry();
                           
-  private NetworkTableEntry m_sw0 = m_tab.add("SW0", m_bStepSWList[0])
+  private NetworkTableEntry m_sw0 = m_tab.add("Step0Sw", m_bStepSWList[0])
                                       .withPosition(2, 1)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kBooleanBox)
                                       .getEntry();
 
-  private NetworkTableEntry m_sw1 = m_tab.add("SW1", m_bStepSWList[1])
+  private NetworkTableEntry m_sw1 = m_tab.add("Step1Sw", m_bStepSWList[1])
                                       .withPosition(3, 1)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kBooleanBox)
                                       .getEntry();
 
-  private NetworkTableEntry m_sw2 = m_tab.add("SW2", m_bStepSWList[2])
+  private NetworkTableEntry m_sw2 = m_tab.add("Step2Sw", m_bStepSWList[2])
                                       .withPosition(4, 1)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kBooleanBox)
                                       .getEntry();
 
-  private NetworkTableEntry m_sw3 = m_tab.add("SW3", m_bStepSWList[3])
+  private NetworkTableEntry m_sw3 = m_tab.add("Step3Sw", m_bStepSWList[3])
                                       .withPosition(5, 1)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kBooleanBox)
                                       .getEntry();
 
-  private NetworkTableEntry m_sw4 = m_tab.add("SW4", m_bStepSWList[4])
+  private NetworkTableEntry m_sw4 = m_tab.add("Step4Sw", m_bStepSWList[4])
                                       .withPosition(6, 1)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kBooleanBox)
@@ -205,12 +205,13 @@ public class Autonomous extends SubsystemBase {
 
     m_wait1 = new WaitCommand(1);
     m_autoCommand.addOption(AutonomousSteps.WAIT1, m_wait1);
-    m_stepWait1Sw1 = new StepState(AutonomousSteps.WAIT1, () -> m_ConsoleAuto.getRawButton(1));
+    //m_stepWait1Sw1 = new StepState(AutonomousSteps.WAIT1, () -> m_ConsoleAuto.getRawButton(1));
+    m_stepWait1Sw1 = new StepState(AutonomousSteps.WAIT1, m_ConsoleAuto.getSwitchSupplier(1));
     
     m_wait2 = new WaitCommand(2);
     m_autoCommand.addOption(AutonomousSteps.WAIT2, m_wait2);
-    m_stepWait2Sw1 = new StepState(AutonomousSteps.WAIT2, () -> m_ConsoleAuto.getRawButton(1));
-    m_stepWait2Sw2 = new StepState(AutonomousSteps.WAIT2, () -> m_ConsoleAuto.getRawButton(2));
+    m_stepWait2Sw1 = new StepState(AutonomousSteps.WAIT2, m_ConsoleAuto.getSwitchSupplier(1));
+    m_stepWait2Sw2 = new StepState(AutonomousSteps.WAIT2, m_ConsoleAuto.getSwitchSupplier(2));
 
     m_waitForCount = new WaitForCount(1, () -> m_ConsoleAuto.getROT_SW_1());
     m_autoCommand.addOption(AutonomousSteps.WAITLOOP, m_waitForCount);
@@ -218,16 +219,16 @@ public class Autonomous extends SubsystemBase {
 
     m_driveDist1 = new DriveDistanceTrapProfile(-2, m_driveNorm);
     m_autoCommand.addOption(AutonomousSteps.DRIVE1, m_driveDist1);
-    m_stepDriveDist1 = new StepState(AutonomousSteps.DRIVE1, () -> m_ConsoleAuto.getRawButton(3));
+    m_stepDriveDist1 = new StepState(AutonomousSteps.DRIVE1, m_ConsoleAuto.getSwitchSupplier(3));
     
     m_driveDistSM1 = new DriveDistanceSMPID(-2, m_driveNorm);
     m_autoCommand.addOption(AutonomousSteps.DRIVE2, m_driveDistSM1);
-    m_stepDriveDist2 = new StepState(AutonomousSteps.DRIVE2, () -> m_ConsoleAuto.getRawButton(3));
+    m_stepDriveDist2 = new StepState(AutonomousSteps.DRIVE2, m_stepDriveDist1.getBooleanSupplier());
 
     genTrajectory();
     m_drive3Path = new DriveRamsetePath(m_drive3Trajectory, m_driveNorm);
     m_autoCommand.addOption(AutonomousSteps.DRIVE3, m_drive3Path);
-    m_stepDrive3Path = new StepState(AutonomousSteps.DRIVE3, () -> m_ConsoleAuto.getRawButton(4));
+    m_stepDrive3Path = new StepState(AutonomousSteps.DRIVE3, m_stepDriveDist1.getBooleanSupplier());
 
 
     m_cmdSteps = new StepState [] [] {

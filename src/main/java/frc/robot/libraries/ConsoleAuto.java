@@ -1,5 +1,7 @@
 package frc.robot.libraries;
 
+import java.util.function.BooleanSupplier;
+
 import edu.wpi.first.wpilibj.GenericHID;
 //import edu.wpi.first.wpilibj2.command.button.*;
 
@@ -23,6 +25,10 @@ public class ConsoleAuto extends GenericHID {
 
     public boolean getButton(int button) {
         return this.getRawButton(button);
+    }
+
+    public BooleanSupplier getSwitchSupplier(int button) {
+        return () -> this.getRawButton(button);
     }
 
 }

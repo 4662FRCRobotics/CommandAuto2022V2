@@ -19,14 +19,15 @@ public class DriveRamsetePath extends RamseteCommand {
 
   public DriveRamsetePath(Trajectory trajectory, DriveNormSubsystem driveNorm) {
     // Use addRequirements() here to declare subsystem dependencies.
+    // alternate construction omits feedfwd, wheelspeeds, and pidcontrollers
     super(trajectory,
           driveNorm::getPos,
           new RamseteController(),
-          driveNorm.getSmpFeedFwd(),
+          //driveNorm.getSmpFeedFwd(),
           DriveNormSubsystemConst.kDRIVE_KINEMATICS,
-          driveNorm::getWheelSpeeds,
-          new PIDController(DriveNormSubsystemConst.kCONTROL_P, 0, DriveNormSubsystemConst.kCONTROL_D),
-          new PIDController(DriveNormSubsystemConst.kCONTROL_P, 0, DriveNormSubsystemConst.kCONTROL_D),
+          //driveNorm::getWheelSpeeds,
+          //new PIDController(DriveNormSubsystemConst.kRAMSETE_P, 0, DriveNormSubsystemConst.kRAMSETE_D),
+          //new PIDController(DriveNormSubsystemConst.kRAMSETE_P, 0, DriveNormSubsystemConst.kRAMSETE_D),
           driveNorm::tankDriveVolts,
           driveNorm
           );
@@ -41,7 +42,7 @@ public class DriveRamsetePath extends RamseteCommand {
     super.initialize();
     m_driveNorm.resetOdometry(m_trajectory.getInitialPose());
   }
-  /*
+  /* use super inherited methods
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override

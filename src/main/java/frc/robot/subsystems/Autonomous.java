@@ -4,6 +4,8 @@
 
 package frc.robot.subsystems;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -13,7 +15,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.TrajectoryUtil;
 import edu.wpi.first.networktables.NetworkTableEntry;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInWidgets;
 import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
@@ -178,6 +183,9 @@ public class Autonomous extends SubsystemBase {
   private DriveRamsetePath m_drive3Path;
   private StepState m_stepDrive3Path;
 
+  private String m_path1JSON = "paths/Path1.wpilib.json";
+  private Trajectory m_trajPath1;
+
   private AutonomousSteps m_currentStepName;
   private StepState[] [] m_cmdSteps;
 
@@ -230,6 +238,7 @@ public class Autonomous extends SubsystemBase {
     m_autoCommand.addOption(AutonomousSteps.DRIVE3, m_drive3Path);
     m_stepDrive3Path = new StepState(AutonomousSteps.DRIVE3, m_stepDriveDist1.getBooleanSupplier());
 
+    readPaths();
 
     m_cmdSteps = new StepState [] [] {
       {m_stepWaitForCount, m_stepDriveDist1, m_stepWait1Sw1, m_stepWait2Sw2},
@@ -244,8 +253,17 @@ public class Autonomous extends SubsystemBase {
       TrajectoryGenerator.generateTrajectory(
         new Pose2d(0, 0, new Rotation2d(0)),
         List.of(new Translation2d(1, 0)),
-        new Pose2d(2, 0, new Rotation2d(0)),
+        new Pose2d(4, 0, new Rotation2d(0)),
         m_driveNorm.getTrajConfig());
+  }
+
+  private void readPaths() {
+    try {
+      Path trajPath1 = Filesystem.getDeployDirectory().toPath().resolve(m_path1JSON);
+      m_trajPath1 = TrajectoryUtil.fromPathweaverJson(trajPath1);
+    } catch (IOException ex) {
+      DriverStation.reportError("Unable to open trajectory: " + m_path1JSON, ex.getStackTrace());
+    }
   }
 
   @Override

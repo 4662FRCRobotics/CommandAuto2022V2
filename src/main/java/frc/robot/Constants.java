@@ -69,6 +69,14 @@ public final class Constants {
         public static final double kSMARTMOT_MIN_V = 0;
         public static final double kSMARTMOT_MAX_ACC = 100;
         public static final double kSMARTMOT_ALLOWED_ERR = 0.0;
+
+        public static final double kRAMSETE_P = 0.133;
+        public static final double kRAMSETE_I = 0;
+        public static final double kRAMSETE_D = 2.7;
+        public static final double kRAMSETE_IZONE = 0;
+        public static final double kRAMSETE_FF = 0;
+        public static final double kRAMSETE_MAX_OUT = 1.0;
+        public static final double kRAMSETE_MIN_OUT = -1.0;
     }
 
     public static final class ControllerConst {

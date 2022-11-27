@@ -1,0 +1,37 @@
+{
+  "NetworkTables": {
+    "FMSInfo": {
+      "open": true
+    },
+    "LiveWindow": {
+      ".status": {
+        "open": true
+      },
+      "Autonomous": {
+        "open": true
+      },
+      "DriveNormSubsystem": {
+        "open": true
+      },
+      "open": true
+    },
+    "Shuffleboard": {
+      "Autonomous": {
+        "open": true
+      },
+      "open": true
+    },
+    "SmartDashboard": {
+      "open": true
+    },
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/LiveWindow/Ungrouped/DifferentialDrive[1]": "DifferentialDrive",
+      "/LiveWindow/Ungrouped/Scheduler": "Scheduler"
+    }
+  },
+  "NetworkTables Settings": {
+    "mode": "Client",
+    "serverTeam": "4662"
+  }
+}

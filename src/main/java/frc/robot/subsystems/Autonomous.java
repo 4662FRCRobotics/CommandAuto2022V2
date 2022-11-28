@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -30,6 +31,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.commands.DriveDistanceSMPID;
 import frc.robot.commands.DriveDistanceTrapProfile;
 import frc.robot.commands.DriveRamsetePath;
+import frc.robot.commands.GenRandomBoolean;
 import frc.robot.commands.WaitForCount;
 import frc.robot.libraries.AutonomousCommands;
 import frc.robot.libraries.AutonomousSteps;
@@ -172,6 +174,7 @@ public class Autonomous extends SubsystemBase {
   private WaitCommand m_wait2;
   private StepState m_stepWait2Sw1;
   private StepState m_stepWait2Sw2;
+  private StepState m_stepWait2SwAB;
   private WaitForCount m_waitForCount;
   private StepState m_stepWaitForCount;
   private DriveDistanceTrapProfile m_driveDist1;
@@ -182,12 +185,17 @@ public class Autonomous extends SubsystemBase {
   private Trajectory m_drive3Trajectory;
   private DriveRamsetePath m_drive3Path;
   private StepState m_stepDrive3Path;
-
+  
   private String m_path1JSON = "paths/Path1.wpilib.json";
   private Trajectory m_trajPath1;
 
+  private GenRandomBoolean m_autoBool1;
+  private StepState m_stepAutoBool1;
+
   private AutonomousSteps m_currentStepName;
   private StepState[] [] m_cmdSteps;
+
+  private boolean m_bool1 = false;
 
 
   /*
@@ -213,13 +221,13 @@ public class Autonomous extends SubsystemBase {
 
     m_wait1 = new WaitCommand(1);
     m_autoCommand.addOption(AutonomousSteps.WAIT1, m_wait1);
-    //m_stepWait1Sw1 = new StepState(AutonomousSteps.WAIT1, () -> m_ConsoleAuto.getRawButton(1));
     m_stepWait1Sw1 = new StepState(AutonomousSteps.WAIT1, m_ConsoleAuto.getSwitchSupplier(1));
     
     m_wait2 = new WaitCommand(2);
     m_autoCommand.addOption(AutonomousSteps.WAIT2, m_wait2);
     m_stepWait2Sw1 = new StepState(AutonomousSteps.WAIT2, m_ConsoleAuto.getSwitchSupplier(1));
     m_stepWait2Sw2 = new StepState(AutonomousSteps.WAIT2, m_ConsoleAuto.getSwitchSupplier(2));
+    m_stepWait2SwAB = new StepState(AutonomousSteps.WAIT2, this.isBool1());
 
     m_waitForCount = new WaitForCount(1, () -> m_ConsoleAuto.getROT_SW_1());
     m_autoCommand.addOption(AutonomousSteps.WAITLOOP, m_waitForCount);
@@ -240,10 +248,14 @@ public class Autonomous extends SubsystemBase {
 
     readPaths();
 
+    m_autoBool1 = new GenRandomBoolean(this::setBool1);
+    m_autoCommand.addOption(AutonomousSteps.FINDSUMPIN, m_autoBool1);
+    m_stepAutoBool1 = new StepState(AutonomousSteps.FINDSUMPIN, m_ConsoleAuto.getSwitchSupplier(4));
+
     m_cmdSteps = new StepState [] [] {
       {m_stepWaitForCount, m_stepDriveDist1, m_stepWait1Sw1, m_stepWait2Sw2},
       {m_stepWait2Sw1, m_stepDriveDist2, m_stepWaitForCount},
-      {m_stepWaitForCount, m_stepDrive3Path, m_stepWait2Sw1}
+      {m_stepWaitForCount, m_stepDrive3Path, m_stepAutoBool1, m_stepWait2SwAB}
     };
 
   }
@@ -363,5 +375,13 @@ public class Autonomous extends SubsystemBase {
   public boolean isCommandDone() {
     return m_bIsCommandDone;
   }
+
+  public void setBool1(boolean bool) {
+    m_bool1 = bool;
+  }
+
+  public BooleanSupplier isBool1() {
+    return () -> m_bool1;
+  } 
 
 }

@@ -278,13 +278,7 @@ public class Autonomous extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    m_autoCmd.setString(m_strCommand);
-    m_iWaitLoop.setValue(m_iWaitCount); 
-    for (int ix = 0; ix < kSTEPS; ix++) {
-      m_step[ix].setString(m_strStepList[ix]);
-      m_sw[ix].setValue(m_bStepSWList[ix]);
-      m_st[ix].setString(m_strStepStatusList[ix]);
-    }
+   
   }
 
   public void selectAutoCommand() {
@@ -294,19 +288,32 @@ public class Autonomous extends SubsystemBase {
     if (autoSelectIx >= m_autoSelectCommand.length) {
       autoSelectIx = 0;
     }
-    m_selectedCommand = m_autoSelectCommand[autoSelectIx];
-    m_strCommand = m_selectedCommand.toString();
-    for (int ix=0; ix < m_cmdSteps [autoSelectIx].length; ix++) {
-      m_strStepList [ix] = m_cmdSteps [autoSelectIx] [ix].getStrName();
-      m_bStepSWList [ix] = m_cmdSteps [autoSelectIx] [ix].isTrue();
-      m_strStepStatusList [ix] = kSTATUS_PEND;
+
+    if (m_selectedCommand != m_autoSelectCommand[autoSelectIx]) { //then do all this stuff
+      m_selectedCommand = m_autoSelectCommand[autoSelectIx];
+      m_strCommand = m_selectedCommand.toString();
+      for (int ix=0; ix < m_cmdSteps [autoSelectIx].length; ix++) {
+        m_strStepList [ix] = m_cmdSteps [autoSelectIx] [ix].getStrName();
+        m_bStepSWList [ix] = m_cmdSteps [autoSelectIx] [ix].isTrue();
+        m_strStepStatusList [ix] = kSTATUS_PEND;
+      }
+      for (int ix = m_cmdSteps [autoSelectIx].length; ix < m_strStepList.length; ix++) {
+        m_strStepList [ix] = "";
+        m_bStepSWList [ix] = false;
+        m_strStepStatusList [ix] = "";
+      }
+      m_autoCmd.setString(m_strCommand); 
+      for (int ix = 0; ix < kSTEPS; ix++) {
+        m_step[ix].setString(m_strStepList[ix]);
+        m_sw[ix].setValue(m_bStepSWList[ix]);
+        m_st[ix].setString(m_strStepStatusList[ix]);
+      }
     }
-    for (int ix = m_cmdSteps [autoSelectIx].length; ix < m_strStepList.length; ix++) {
-      m_strStepList [ix] = "";
-      m_bStepSWList [ix] = false;
-      m_strStepStatusList [ix] = "";
+
+    if (m_iWaitCount != m_ConsoleAuto.getROT_SW_1()) {
+      m_iWaitCount = m_ConsoleAuto.getROT_SW_1();
+      m_iWaitLoop.setValue(m_iWaitCount); 
     }
-    m_iWaitCount = m_ConsoleAuto.getROT_SW_1();
 
   }
 
@@ -342,6 +349,7 @@ public class Autonomous extends SubsystemBase {
     while (stepName == null  && !m_bIsCommandDone) {
       if (m_stepIndex >= 0 && m_stepIndex < kSTEPS) {
         m_strStepStatusList [m_stepIndex] = completionAction;
+        m_st[m_stepIndex].setString(m_strStepStatusList[m_stepIndex]);
       }
       m_stepIndex++;
       if (m_stepIndex >= m_cmdSteps [m_iPatternSelect].length) {
@@ -349,10 +357,12 @@ public class Autonomous extends SubsystemBase {
       } else {
         if (m_stepIndex < kSTEPS) {
           m_bStepSWList [m_stepIndex] = m_cmdSteps [m_iPatternSelect] [m_stepIndex].isTrue();
-          System.out.println("Step Boolean" + m_bStepSWList [m_stepIndex]);
+          m_sw[m_stepIndex].setValue(m_bStepSWList[m_stepIndex]);
+ //         System.out.println("Step Boolean" + m_bStepSWList [m_stepIndex]);
         }
         if (m_cmdSteps [m_iPatternSelect] [m_stepIndex].isTrue()) {
           m_strStepStatusList [m_stepIndex] = kSTATUS_ACTIVE;
+          m_st[m_stepIndex].setString(m_strStepStatusList[m_stepIndex]);
           stepName = m_cmdSteps [m_iPatternSelect] [m_stepIndex].getName();
         } else {
           completionAction = kSTATUS_SKIP;

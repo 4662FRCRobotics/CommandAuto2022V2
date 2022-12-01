@@ -45,21 +45,25 @@ public class Autonomous extends SubsystemBase {
   DriveNormSubsystem m_driveNorm;
 
   AutonomousCommandSelector<AutonomousSteps> m_autoCommand;
-  String kAUTO_TAB = "Autonomous";
-  String kSTATUS_PEND = "PEND";
-  String kSTATUS_ACTIVE = "ACTV";
-  String kSTATUS_DONE = "DONE";
-  String kSTATUS_SKIP = "SKIP";
-  String kSTATUS_NULL = "NULL";
+  private String kAUTO_TAB = "Autonomous";
+  private String kSTATUS_PEND = "PEND";
+  private String kSTATUS_ACTIVE = "ACTV";
+  private String kSTATUS_DONE = "DONE";
+  private String kSTATUS_SKIP = "SKIP";
+  private String kSTATUS_NULL = "NULL";
+
+  private int kSTEPS = 5;
 
   ConsoleAuto m_ConsoleAuto;
   AutonomousCommands m_autoSelectCommand[] = AutonomousCommands.values();
   AutonomousCommands m_selectedCommand;
+  
   private ShuffleboardTab m_tab = Shuffleboard.getTab(kAUTO_TAB);
-  String m_strCommand = " ";
-  String m_strStepList [] = {"", "", "", "", ""};
-  boolean m_bStepSWList [] = {false , false, false, false, false};
-  String m_strStepStatusList [] = {"", "", "", "", ""};
+  private String m_strCommand = " ";
+  private String [] m_strStepList = {"", "", "", "", ""};
+  private boolean [] m_bStepSWList = {false , false, false, false, false};
+  private String [] m_strStepStatusList = {"", "", "", "", ""};
+
   private NetworkTableEntry m_autoCmd = m_tab.add("Selected Pattern",  " ")
                                         .withSize(2, 1)
                                         .withPosition(0, 0)    
@@ -72,95 +76,86 @@ public class Autonomous extends SubsystemBase {
                                         .withProperties(Map.of("min", 0, "max", 5))
                                         .getEntry();
 
-  private NetworkTableEntry m_step0 = m_tab.add("Step0", m_strStepList[0])
+  private NetworkTableEntry m_step [] = {m_tab.add("Step0", m_strStepList[0])
                                       .withWidget(BuiltInWidgets.kTextView)
                                       .withPosition(2, 0)
                                       .withSize(1, 1)
-                                      .getEntry();
-  private NetworkTableEntry m_step1 = m_tab.add("Step1", m_strStepList[1])
+                                      .getEntry(),
+                                      m_tab.add("Step1", m_strStepList[1])
                                       .withWidget(BuiltInWidgets.kTextView)
                                       .withPosition(3, 0)
                                       .withSize(1, 1)
-                                      .getEntry();
-  private NetworkTableEntry m_step2 = m_tab.add("Step2", m_strStepList[2])
+                                      .getEntry(),
+                                      m_tab.add("Step2", m_strStepList[2])
                                       .withWidget(BuiltInWidgets.kTextView)
                                       .withPosition(4, 0)
                                       .withSize(1, 1)
-                                      .getEntry();
-  private NetworkTableEntry m_step3 = m_tab.add("Step3", m_strStepList[3])
+                                      .getEntry(),
+                                      m_tab.add("Step3", m_strStepList[3])
                                       .withWidget(BuiltInWidgets.kTextView)
                                       .withPosition(5, 0)
                                       .withSize(1, 1)
-                                      .getEntry();
-  private NetworkTableEntry m_step4 = m_tab.add("Step4", m_strStepList[4])
+                                      .getEntry(),
+                                      m_tab.add("Step4", m_strStepList[4])
                                       .withWidget(BuiltInWidgets.kTextView)
                                       .withPosition(6, 0)
                                       .withSize(1, 1)
-                                      .getEntry();
-                          
-  private NetworkTableEntry m_sw0 = m_tab.add("Step0Sw", m_bStepSWList[0])
+                                      .getEntry()
+                                    };
+                           
+  private NetworkTableEntry m_sw [] = {m_tab.add("Step0Sw", m_bStepSWList[0])
                                       .withPosition(2, 1)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kBooleanBox)
-                                      .getEntry();
-
-  private NetworkTableEntry m_sw1 = m_tab.add("Step1Sw", m_bStepSWList[1])
+                                      .getEntry(),
+                                      m_tab.add("Step1Sw", m_bStepSWList[1])
                                       .withPosition(3, 1)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kBooleanBox)
-                                      .getEntry();
-
-  private NetworkTableEntry m_sw2 = m_tab.add("Step2Sw", m_bStepSWList[2])
+                                      .getEntry(),
+                                      m_tab.add("Step2Sw", m_bStepSWList[2])
                                       .withPosition(4, 1)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kBooleanBox)
-                                      .getEntry();
-
-  private NetworkTableEntry m_sw3 = m_tab.add("Step3Sw", m_bStepSWList[3])
+                                      .getEntry(),
+                                      m_tab.add("Step3Sw", m_bStepSWList[3])
                                       .withPosition(5, 1)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kBooleanBox)
-                                      .getEntry();
-
-  private NetworkTableEntry m_sw4 = m_tab.add("Step4Sw", m_bStepSWList[4])
+                                      .getEntry(),
+                                      m_tab.add("Step4Sw", m_bStepSWList[4])
                                       .withPosition(6, 1)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kBooleanBox)
-                                      .getEntry();
+                                      .getEntry()
+                                  };
 
-  private NetworkTableEntry m_st0 = m_tab.add("Stat0", m_strStepStatusList[0])
+  private NetworkTableEntry m_st [] = {m_tab.add("Stat0", m_strStepStatusList[0])
                                       .withPosition(2, 2)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kTextView)
-                                      .getEntry();
-
-                                      
-  private NetworkTableEntry m_st1 = m_tab.add("Stat1", m_strStepStatusList[1])
-  .withPosition(3, 2)
-  .withSize(1, 1)
-  .withWidget(BuiltInWidgets.kTextView)
-  .getEntry();
-
-  
-  private NetworkTableEntry m_st2 = m_tab.add("Stat2", m_strStepStatusList[2])
+                                      .getEntry(),
+                                      m_tab.add("Stat1", m_strStepStatusList[1])
+                                      .withPosition(3, 2)
+                                      .withSize(1, 1)
+                                      .withWidget(BuiltInWidgets.kTextView)
+                                      .getEntry(),
+                                      m_tab.add("Stat2", m_strStepStatusList[2])
                                       .withPosition(4, 2)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kTextView)
-                                      .getEntry();
-
-                                      
-  private NetworkTableEntry m_st3 = m_tab.add("Stat3", m_strStepStatusList[3])
-  .withPosition(5, 2)
-  .withSize(1, 1)
-  .withWidget(BuiltInWidgets.kTextView)
-  .getEntry();
-
-  
-  private NetworkTableEntry m_st4 = m_tab.add("Stat4", m_strStepStatusList[4])
+                                      .getEntry(),
+                                      m_tab.add("Stat3", m_strStepStatusList[3])
+                                      .withPosition(5, 2)
+                                      .withSize(1, 1)
+                                      .withWidget(BuiltInWidgets.kTextView)
+                                      .getEntry(),
+                                      m_tab.add("Stat4", m_strStepStatusList[4])
                                       .withPosition(6, 2)
                                       .withSize(1, 1)
                                       .withWidget(BuiltInWidgets.kTextView)
-                                      .getEntry();
+                                      .getEntry()
+                                       };
 
   private int m_iPatternSelect;
 
@@ -227,7 +222,6 @@ public class Autonomous extends SubsystemBase {
     m_autoCommand.addOption(AutonomousSteps.WAIT2, m_wait2);
     m_stepWait2Sw1 = new StepState(AutonomousSteps.WAIT2, m_ConsoleAuto.getSwitchSupplier(1));
     m_stepWait2Sw2 = new StepState(AutonomousSteps.WAIT2, m_ConsoleAuto.getSwitchSupplier(2));
-    m_stepWait2SwAB = new StepState(AutonomousSteps.WAIT2, this.isBool1());
 
     m_waitForCount = new WaitForCount(1, () -> m_ConsoleAuto.getROT_SW_1());
     m_autoCommand.addOption(AutonomousSteps.WAITLOOP, m_waitForCount);
@@ -246,11 +240,12 @@ public class Autonomous extends SubsystemBase {
     m_autoCommand.addOption(AutonomousSteps.DRIVE3, m_drive3Path);
     m_stepDrive3Path = new StepState(AutonomousSteps.DRIVE3, m_stepDriveDist1.getBooleanSupplier());
 
-    readPaths();
+    m_trajPath1 = readPaths(m_path1JSON);
 
-    m_autoBool1 = new GenRandomBoolean(this::setBool1);
+    m_autoBool1 = new GenRandomBoolean(m_driveNorm::setBool1);
     m_autoCommand.addOption(AutonomousSteps.FINDSUMPIN, m_autoBool1);
     m_stepAutoBool1 = new StepState(AutonomousSteps.FINDSUMPIN, m_ConsoleAuto.getSwitchSupplier(4));
+    m_stepWait2SwAB = new StepState(AutonomousSteps.WAIT2, () -> m_driveNorm.isBool1());
 
     m_cmdSteps = new StepState [] [] {
       {m_stepWaitForCount, m_stepDriveDist1, m_stepWait1Sw1, m_stepWait2Sw2},
@@ -265,39 +260,31 @@ public class Autonomous extends SubsystemBase {
       TrajectoryGenerator.generateTrajectory(
         new Pose2d(0, 0, new Rotation2d(0)),
         List.of(new Translation2d(1, 0)),
-        new Pose2d(4, 0, new Rotation2d(0)),
+        new Pose2d(2, 0, new Rotation2d(0)),
         m_driveNorm.getTrajConfig());
   }
 
-  private void readPaths() {
+  private Trajectory readPaths(String jsonPath) {
+    Trajectory trajectory = null;
     try {
-      Path trajPath1 = Filesystem.getDeployDirectory().toPath().resolve(m_path1JSON);
-      m_trajPath1 = TrajectoryUtil.fromPathweaverJson(trajPath1);
+      Path trajPath = Filesystem.getDeployDirectory().toPath().resolve(jsonPath);
+      trajectory = TrajectoryUtil.fromPathweaverJson(trajPath);
     } catch (IOException ex) {
       DriverStation.reportError("Unable to open trajectory: " + m_path1JSON, ex.getStackTrace());
     }
+    return trajectory;
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     m_autoCmd.setString(m_strCommand);
-    m_iWaitLoop.setValue(m_iWaitCount);
-    m_step0.setString(m_strStepList[0]);
-    m_sw0.setValue(m_bStepSWList[0]);
-    m_st0.setString(m_strStepStatusList[0]);
-    m_step1.setString(m_strStepList[1]);
-    m_sw1.setValue(m_bStepSWList[1]);
-    m_st1.setString(m_strStepStatusList[1]);
-    m_step2.setString(m_strStepList[2]);
-    m_sw2.setValue(m_bStepSWList[2]);
-    m_st2.setString(m_strStepStatusList[2]);
-    m_step3.setString(m_strStepList[3]);
-    m_sw3.setValue(m_bStepSWList[3]);
-    m_st3.setString(m_strStepStatusList[3]);
-    m_step4.setString(m_strStepList[4]);
-    m_sw4.setValue(m_bStepSWList[4]);
-    m_st4.setString(m_strStepStatusList[4]);
+    m_iWaitLoop.setValue(m_iWaitCount); 
+    for (int ix = 0; ix < kSTEPS; ix++) {
+      m_step[ix].setString(m_strStepList[ix]);
+      m_sw[ix].setValue(m_bStepSWList[ix]);
+      m_st[ix].setString(m_strStepStatusList[ix]);
+    }
   }
 
   public void selectAutoCommand() {
@@ -353,13 +340,17 @@ public class Autonomous extends SubsystemBase {
     AutonomousSteps stepName = null;
 
     while (stepName == null  && !m_bIsCommandDone) {
-      if (m_stepIndex >= 0) {
+      if (m_stepIndex >= 0 && m_stepIndex < kSTEPS) {
         m_strStepStatusList [m_stepIndex] = completionAction;
       }
       m_stepIndex++;
       if (m_stepIndex >= m_cmdSteps [m_iPatternSelect].length) {
         m_bIsCommandDone = true;
       } else {
+        if (m_stepIndex < kSTEPS) {
+          m_bStepSWList [m_stepIndex] = m_cmdSteps [m_iPatternSelect] [m_stepIndex].isTrue();
+          System.out.println("Step Boolean" + m_bStepSWList [m_stepIndex]);
+        }
         if (m_cmdSteps [m_iPatternSelect] [m_stepIndex].isTrue()) {
           m_strStepStatusList [m_stepIndex] = kSTATUS_ACTIVE;
           stepName = m_cmdSteps [m_iPatternSelect] [m_stepIndex].getName();
@@ -375,13 +366,5 @@ public class Autonomous extends SubsystemBase {
   public boolean isCommandDone() {
     return m_bIsCommandDone;
   }
-
-  public void setBool1(boolean bool) {
-    m_bool1 = bool;
-  }
-
-  public BooleanSupplier isBool1() {
-    return () -> m_bool1;
-  } 
 
 }

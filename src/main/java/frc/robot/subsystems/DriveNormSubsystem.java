@@ -45,6 +45,8 @@ public class DriveNormSubsystem extends SubsystemBase {
 
   private double m_driveDistance;
 
+  private boolean m_bool1 = false;
+
   public DriveNormSubsystem() {
     m_leftMotor1 = new CANSparkMax(DriveNormSubsystemConst.kLEFT_MOTOR1, MotorType.kBrushless);
     m_rightMotor1 = new CANSparkMax(DriveNormSubsystemConst.kRIGHT_MOTOR1, MotorType.kBrushless);
@@ -216,4 +218,14 @@ public class DriveNormSubsystem extends SubsystemBase {
     m_leftMotor1.getEncoder().setPosition(0);
     m_rightMotor1.getEncoder().setPosition(0);
   }
+
+  public void setBool1(boolean bool) {
+    m_bool1 = bool;
+    System.out.println("DrivesetBool" + m_bool1);
+  }
+
+  public boolean isBool1() {
+    System.out.println("DriveisBool" + m_bool1);
+    return m_bool1;
+  } 
 }

@@ -8,7 +8,8 @@ package frc.robot.libraries;
 public enum AutonomousCommands {
     LOW_GOAL_OUT,
     HIGH_GOAL_D1,
-    HIGH_GOAL_D2;
+    HIGH_GOAL_D2,
+    DRIVE_PATH1;
 
     public String getSelectName() {
         return this.toString();

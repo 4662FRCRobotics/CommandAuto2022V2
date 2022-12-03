@@ -16,8 +16,9 @@ public class DriveRamsetePath extends RamseteCommand {
   /** Creates a new DriveRamsetePath. */
   private DriveNormSubsystem m_driveNorm;
   private Trajectory m_trajectory;
+  private boolean m_resetOdometry;
 
-  public DriveRamsetePath(Trajectory trajectory, DriveNormSubsystem driveNorm) {
+  public DriveRamsetePath(Trajectory trajectory, boolean resetOdometry, DriveNormSubsystem driveNorm) {
     // Use addRequirements() here to declare subsystem dependencies.
     // alternate construction omits feedfwd, wheelspeeds, and pidcontrollers
     super(trajectory,
@@ -32,15 +33,21 @@ public class DriveRamsetePath extends RamseteCommand {
           driveNorm
           );
     m_trajectory = trajectory;
+    m_resetOdometry = resetOdometry;
     m_driveNorm = driveNorm;
   }
 
+  public DriveRamsetePath(Trajectory trajectory, DriveNormSubsystem driveNorm) {
+    this(trajectory, false, driveNorm);
+  }
   
   // Called when the command is initially scheduled.
   @Override
   public void initialize() {
     super.initialize();
-    m_driveNorm.resetOdometry(m_trajectory.getInitialPose());
+    if (m_resetOdometry) {
+      m_driveNorm.resetOdometry(m_trajectory.getInitialPose());
+    }
   }
   /* use super inherited methods
 

@@ -9,6 +9,7 @@ public enum AutonomousSteps {
     DRIVE1,
     DRIVE2,
     DRIVE3,
+    DRIVEP1,
     WAIT1,
     WAIT2,
     WAITLOOP,

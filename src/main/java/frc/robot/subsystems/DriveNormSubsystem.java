@@ -221,11 +221,11 @@ public class DriveNormSubsystem extends SubsystemBase {
 
   public void setBool1(boolean bool) {
     m_bool1 = bool;
-    System.out.println("DrivesetBool" + m_bool1);
+    //System.out.println("DrivesetBool" + m_bool1);
   }
 
   public boolean isBool1() {
-    System.out.println("DriveisBool" + m_bool1);
+    //System.out.println("DriveisBool" + m_bool1);
     return m_bool1;
   } 
 }

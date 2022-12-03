@@ -42,7 +42,7 @@ import frc.robot.libraries.StepState;
 public class Autonomous extends SubsystemBase {
   /** Creates a new ExampleSubsystem. */
 
-  DriveNormSubsystem m_driveNorm;
+  private DriveNormSubsystem m_driveNorm;
 
   AutonomousCommandSelector<AutonomousSteps> m_autoCommand;
   private String kAUTO_TAB = "Autonomous";
@@ -53,6 +53,7 @@ public class Autonomous extends SubsystemBase {
   private String kSTATUS_NULL = "NULL";
 
   private int kSTEPS = 5;
+  private boolean kRESET_ODOMETRY = true;
 
   ConsoleAuto m_ConsoleAuto;
   AutonomousCommands m_autoSelectCommand[] = AutonomousCommands.values();
@@ -65,8 +66,8 @@ public class Autonomous extends SubsystemBase {
   private String [] m_strStepStatusList = {"", "", "", "", ""};
 
   private NetworkTableEntry m_autoCmd = m_tab.add("Selected Pattern",  " ")
-                                        .withSize(2, 1)
                                         .withPosition(0, 0)    
+                                        .withSize(2, 1)
                                         .getEntry();
 
   private NetworkTableEntry m_iWaitLoop = m_tab.add("WaitLoop", 0)
@@ -74,6 +75,12 @@ public class Autonomous extends SubsystemBase {
                                         .withPosition(0, 1)
                                         .withSize(2, 2)
                                         .withProperties(Map.of("min", 0, "max", 5))
+                                        .getEntry();
+
+  private NetworkTableEntry m_allianceColor = m_tab.add("Alliance", true)
+                                        .withProperties(Map.of("colorWhenTrue", "red", "colorWhenFalse", "blue"))
+                                        .withPosition(0,3)
+                                        .withSize(1, 1)
                                         .getEntry();
 
   private NetworkTableEntry m_step [] = {m_tab.add("Step0", m_strStepList[0])
@@ -173,13 +180,14 @@ public class Autonomous extends SubsystemBase {
   private WaitForCount m_waitForCount;
   private StepState m_stepWaitForCount;
   private DriveDistanceTrapProfile m_driveDist1;
-  //private DriveDistanceTrapProfile m_driveDist2;
   private StepState m_stepDriveDist1;
   private StepState m_stepDriveDist2;
   private DriveDistanceSMPID m_driveDistSM1;
   private Trajectory m_drive3Trajectory;
   private DriveRamsetePath m_drive3Path;
   private StepState m_stepDrive3Path;
+  private DriveRamsetePath m_drivePath1;
+  private StepState m_stepDrivePath1;
   
   private String m_path1JSON = "paths/Path1.wpilib.json";
   private Trajectory m_trajPath1;
@@ -190,10 +198,7 @@ public class Autonomous extends SubsystemBase {
   private AutonomousSteps m_currentStepName;
   private StepState[] [] m_cmdSteps;
 
-  private boolean m_bool1 = false;
-
-
-  /*
+   /*
     parameters needed
     1.  console "joystick" for autonomous
     2.  all subsystems that may be referenced by commands
@@ -209,11 +214,13 @@ public class Autonomous extends SubsystemBase {
 
     m_driveNorm = driveNorm;
     m_ConsoleAuto = consoleAuto;
+
     m_selectedCommand = m_autoSelectCommand[0];
     m_strCommand = m_selectedCommand.toString();
     m_autoCommand = new AutonomousCommandSelector<AutonomousSteps>();
     m_iPatternSelect = -1;
 
+    // build commands and step controls
     m_wait1 = new WaitCommand(1);
     m_autoCommand.addOption(AutonomousSteps.WAIT1, m_wait1);
     m_stepWait1Sw1 = new StepState(AutonomousSteps.WAIT1, m_ConsoleAuto.getSwitchSupplier(1));
@@ -236,25 +243,33 @@ public class Autonomous extends SubsystemBase {
     m_stepDriveDist2 = new StepState(AutonomousSteps.DRIVE2, m_stepDriveDist1.getBooleanSupplier());
 
     genTrajectory();
-    m_drive3Path = new DriveRamsetePath(m_drive3Trajectory, m_driveNorm);
+    m_drive3Path = new DriveRamsetePath(m_drive3Trajectory, kRESET_ODOMETRY, m_driveNorm);
     m_autoCommand.addOption(AutonomousSteps.DRIVE3, m_drive3Path);
     m_stepDrive3Path = new StepState(AutonomousSteps.DRIVE3, m_stepDriveDist1.getBooleanSupplier());
-
-    m_trajPath1 = readPaths(m_path1JSON);
 
     m_autoBool1 = new GenRandomBoolean(m_driveNorm::setBool1);
     m_autoCommand.addOption(AutonomousSteps.FINDSUMPIN, m_autoBool1);
     m_stepAutoBool1 = new StepState(AutonomousSteps.FINDSUMPIN, m_ConsoleAuto.getSwitchSupplier(4));
     m_stepWait2SwAB = new StepState(AutonomousSteps.WAIT2, () -> m_driveNorm.isBool1());
 
+    m_trajPath1 = readPaths(m_path1JSON);
+    m_drivePath1 = new DriveRamsetePath(m_trajPath1, kRESET_ODOMETRY, m_driveNorm);
+    m_autoCommand.addOption(AutonomousSteps.DRIVEP1, m_drivePath1);
+    m_stepDrivePath1 = new StepState(AutonomousSteps.DRIVEP1, m_ConsoleAuto.getSwitchSupplier(5));
+
+    // array group length must match the enum entries in AutonomousCommands
+    // anything extra is ignored
+    // the command lists are matched sequentially to the enum entries
     m_cmdSteps = new StepState [] [] {
       {m_stepWaitForCount, m_stepDriveDist1, m_stepWait1Sw1, m_stepWait2Sw2},
       {m_stepWait2Sw1, m_stepDriveDist2, m_stepWaitForCount},
-      {m_stepWaitForCount, m_stepDrive3Path, m_stepAutoBool1, m_stepWait2SwAB}
+      {m_stepWaitForCount, m_stepDrive3Path, m_stepAutoBool1, m_stepWait2SwAB},
+      {m_stepWaitForCount, m_stepDrivePath1}
     };
 
   }
 
+  // generate an internal trajectory using specified begin, way points, and end
   private void genTrajectory() {
     m_drive3Trajectory = 
       TrajectoryGenerator.generateTrajectory(
@@ -264,6 +279,8 @@ public class Autonomous extends SubsystemBase {
         m_driveNorm.getTrajConfig());
   }
 
+  // read externally generated trajectory (path) from an external file in the standard "deploy" path
+  // these are generated from a standard tool such as pathweaver
   private Trajectory readPaths(String jsonPath) {
     Trajectory trajectory = null;
     try {
@@ -278,9 +295,10 @@ public class Autonomous extends SubsystemBase {
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-   
   }
 
+  // use settings from the joystick designated as the autonomous console to select the autonomous command list
+  // and control specific command execution when appropriate
   public void selectAutoCommand() {
 
     int autoSelectIx = m_ConsoleAuto.getROT_SW_0();
@@ -289,31 +307,32 @@ public class Autonomous extends SubsystemBase {
       autoSelectIx = 0;
     }
 
-    if (m_selectedCommand != m_autoSelectCommand[autoSelectIx]) { //then do all this stuff
-      m_selectedCommand = m_autoSelectCommand[autoSelectIx];
-      m_strCommand = m_selectedCommand.toString();
-      for (int ix=0; ix < m_cmdSteps [autoSelectIx].length; ix++) {
-        m_strStepList [ix] = m_cmdSteps [autoSelectIx] [ix].getStrName();
-        m_bStepSWList [ix] = m_cmdSteps [autoSelectIx] [ix].isTrue();
-        m_strStepStatusList [ix] = kSTATUS_PEND;
-      }
-      for (int ix = m_cmdSteps [autoSelectIx].length; ix < m_strStepList.length; ix++) {
-        m_strStepList [ix] = "";
-        m_bStepSWList [ix] = false;
-        m_strStepStatusList [ix] = "";
-      }
-      m_autoCmd.setString(m_strCommand); 
-      for (int ix = 0; ix < kSTEPS; ix++) {
-        m_step[ix].setString(m_strStepList[ix]);
-        m_sw[ix].setValue(m_bStepSWList[ix]);
-        m_st[ix].setString(m_strStepStatusList[ix]);
-      }
+    boolean isAllianceRed = (DriverStation.getAlliance().name() == "Red");
+    m_allianceColor.setBoolean(isAllianceRed);
+
+    m_selectedCommand = m_autoSelectCommand[autoSelectIx];
+    m_strCommand = m_selectedCommand.toString();
+    m_autoCmd.setString(m_strCommand); 
+
+    for (int ix=0; ix < m_cmdSteps [autoSelectIx].length; ix++) {
+      m_strStepList [ix] = m_cmdSteps [autoSelectIx] [ix].getStrName();
+      m_bStepSWList [ix] = m_cmdSteps [autoSelectIx] [ix].isTrue();
+      m_strStepStatusList [ix] = kSTATUS_PEND;
+    }
+    for (int ix = m_cmdSteps [autoSelectIx].length; ix < m_strStepList.length; ix++) {
+      m_strStepList [ix] = "";
+      m_bStepSWList [ix] = false;
+      m_strStepStatusList [ix] = "";
+    }
+    
+    for (int ix = 0; ix < kSTEPS; ix++) {
+      m_step[ix].setString(m_strStepList[ix]);
+      m_sw[ix].setValue(m_bStepSWList[ix]);
+      m_st[ix].setString(m_strStepStatusList[ix]);
     }
 
-    if (m_iWaitCount != m_ConsoleAuto.getROT_SW_1()) {
-      m_iWaitCount = m_ConsoleAuto.getROT_SW_1();
-      m_iWaitLoop.setValue(m_iWaitCount); 
-    }
+    m_iWaitCount = m_ConsoleAuto.getROT_SW_1();
+    m_iWaitLoop.setValue(m_iWaitCount); 
 
   }
 

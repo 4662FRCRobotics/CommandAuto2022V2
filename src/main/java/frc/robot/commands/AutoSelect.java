@@ -5,6 +5,7 @@
 package frc.robot.commands;
 
 import frc.robot.subsystems.Autonomous;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 
 /** An example command that uses an example subsystem. */
@@ -28,9 +29,12 @@ public class AutoSelect extends CommandBase {
   public void initialize() {}
 
   // Called every time the scheduler runs while the command is scheduled.
+  // only do this while disabled
   @Override
   public void execute() {
-    m_autoSubsystem.selectAutoCommand();
+    if (DriverStation.isDisabled()) {
+      m_autoSubsystem.selectAutoCommand();
+    }
   }
 
   // Called once the command ends or is interrupted.
